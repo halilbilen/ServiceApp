@@ -19,6 +19,7 @@ EStyleSheet.build({
   $rem: Dimensions.get('window').height / 2202,
 });
 
+console.disableYellowBox = true;
 const TabNavigator = createBottomTabNavigator();
 function App() {
   return (

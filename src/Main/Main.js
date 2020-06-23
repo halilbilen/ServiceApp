@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 import { View, Image, TouchableOpacity, Text, ImageBackground, TextInput, Alert } from 'react-native'
 import styles from './Style/index'
-import { FlatList, ScrollView } from 'react-native-gesture-handler';
+import { FlatList } from 'react-native-gesture-handler';
 import publicIP from 'react-native-public-ip';
 import DeviceInfo from 'react-native-device-info';
 import axios from 'react-native-axios'
@@ -17,11 +17,8 @@ var serviceMedia = [
 
 var companyMedia = [
     require('./SourceFiles/empty.png'),
-    require('./SourceFiles/web.png'),
-    require('./SourceFiles/mobil.png'),
-    require('./SourceFiles/tasarim.png'),
-    require('./SourceFiles/reklam.png'),
-    require('./SourceFiles/yazilim.png'),];
+    require('./SourceFiles/oxford.png'),
+    require('./SourceFiles/empty.png')];
 export default class Main extends Component {
     constructor(props) {
         super(props);
@@ -32,14 +29,18 @@ export default class Main extends Component {
             categoryList: [],
             serviceList: [],
             companyList: [],
+            companyCommentList: [],
             screen: 0,
             categoryName: '',
             serviceName: '',
+            companyNames: '',
+            companyMediaId: 0,
             response1: null,
+            company: null,
             companyDetail: false,
             ipAdres: "http://ip-api.com/json/",
             city: '',
-            vote: 0
+            vote: 0, commentArea: true
         }
 
     }
@@ -63,6 +64,9 @@ export default class Main extends Component {
         this.setState({
             city: city.data.city
         })
+        // post(getServiceByCityId)
+
+        //cityServiceList=[]
     }
 
 
@@ -71,7 +75,7 @@ export default class Main extends Component {
         const response = await axios.post('http://192.168.1.34:5003/category/list', { statusId: 1 });
         if (response.data.returnCode === 200) {
             this.setState({
-                categoryList: response.data.data.categories
+                companyDetail: false, categoryList: response.data.data.categories
             });
         }
         else {
@@ -84,12 +88,13 @@ export default class Main extends Component {
         this.setState({
             categorySelected: !this.state.categorySelected
         })
-        const response = await axios.post('http://192.168.1.34:5003/service/get', { categoryId: ItemCategoryId, statusId: 1 })
+        const response = await axios.post('http://192.168.1.34:5003/service/list', { categoryId: ItemCategoryId, statusId: 1 })
         if (response.data.returnCode === 200) {
             this.setState({
                 serviceList: response.data.data.services,
-                screen: 1,
-                categoryName: categoryName
+                companyDetail: false, screen: 1,
+                categoryName: categoryName,
+
             });
         } else {
             Alert.alert(response.data.returnMessage)
@@ -103,7 +108,7 @@ export default class Main extends Component {
         console.log(response);
         if (response.data.returnCode === 200) {
             this.setState({
-                screen: 1,
+                companyDetail: false, screen: 1,
                 serviceList: response.data.data.services
             });
 
@@ -119,7 +124,9 @@ export default class Main extends Component {
             this.setState({
                 companyList: response.data.data.companies,
                 screen: 2,
-                serviceName: name
+                serviceName: name,
+                companyDetail: false,
+
             });
         }
         else {
@@ -129,14 +136,16 @@ export default class Main extends Component {
     }
 
     async GetCompanyComment(companyId, name) {
-        const response = await axios.post('http://192.168.1.34:5003/companycomment/Get', { serviceId: companyId, statusId: 1 });
+        console.log(companyId + name);
+        const response = await axios.post('http://192.168.1.34:5003/companycomment/Get', { companyId: companyId, statusId: 1 });
+        console.log(response);
         if (response.data.returnCode === 200) {
             this.setState({
-                companyList: response.data.data.companycomment,
+                companyCommentList: response.data.data.companyComments,
                 screen: 2,
-                serviceName: name,
-                companyDetail: !this.state.companyDetail,
-                vote: response.data.data.companycomment.vote
+                companyDetail: true,
+                companyNames: name,
+                companyMediaId: companyId
             });
         }
         else {
@@ -231,40 +240,125 @@ export default class Main extends Component {
                 {!this.state.categorySelected ?
                     <View style={styles.ItemHeaderContainer}>
                         <View style={styles.ItemHeader}>
-                            <Text>{this.state.screen === 0 ? this.state.city : this.state.screen === 1 ? this.state.categoryName : this.state.serviceName}</Text>
+                            <View style={{ width: "100%", justifyContent: 'center', alignItems: 'center', bottom: 10 }} >
+                                <View style={{ width: "40%", justifyContent: 'center', alignItems: 'center', borderBottomWidth: 1 }}>
+                                    <Text>{this.state.city.toUpperCase()}</Text>
+                                </View>
+                            </View>
+                            <Text>{this.state.screen === 0 ? "Size yakın hizmetler" : this.state.screen === 1 ? this.state.categoryName : !this.state.companyDetail ? this.state.categoryName + "->" + this.state.serviceName + "->" + "Hizmet Verenler" : this.state.categoryName + "->" + this.state.serviceName + "->" + "Hizmet Verenler"}</Text>
+
                         </View>
                     </View> : null
                 }
                 {!this.state.categorySelected ?
+                    !this.state.companyDetail ?
 
-
-                    <View style={styles.ItemContainer}>
-                        <FlatList
-                            data={this.state.screen === 1 ? this.state.serviceList : this.state.companyList}
-                            numColumns={2}
-                            renderItem={({ item }) => (
-                                <TouchableOpacity style={styles.ItemButton} onPress={this.state.screen === 1 ? this.GetCompanyByServiceId.bind(this, item.serviceId, item.name) : null} >
-                                    <Image style={styles.ItemBackImage} source={require('./SourceFiles/itemContainer.png')} />
-                                    <View style={styles.Item}>
-                                        <Image source={this.state.screen === 1 ? serviceMedia[item.serviceId] : companyMedia[item.companyId]} style={styles.ItemImage} />
-                                        <View style={{ width: "100%", justifyContent: 'center', alignItems: 'center' }}><Text>{item.name}</Text></View>
-                                        <View style={{ width: "80%", justifyContent: 'space-between', alignItems: 'center', flexDirection: 'row' }}>
-                                            <View style={{ justifyContent: 'center', alignItems: 'center', flexDirection: 'row' }}>
-                                                <Text>4</Text>
-                                                <Image source={require('./SourceFiles/star1.png')} style={styles.Star} />
-                                            </View>
-                                            <View style={{ top: 10, flexDirection: 'column' }}>
-                                                <Text style={{ fontSize: 10, textAlign: 'left' }}>190 profesyonel</Text>
-                                                <Text style={{ fontSize: 10, textAlign: 'left' }}>2.752 onaylı yorum</Text>
+                        <View style={styles.ItemContainer}>
+                            <FlatList
+                                data={this.state.screen === 1 ? this.state.serviceList : this.state.companyList}
+                                numColumns={2}
+                                renderItem={({ item }) => (
+                                    <TouchableOpacity style={styles.ItemButton} onPress={this.state.screen === 1 ? this.GetCompanyByServiceId.bind(this, item.serviceId, item.name) : this.GetCompanyComment.bind(this, item.companyId, item.name)} >
+                                        <Image style={styles.ItemBackImage} source={require('./SourceFiles/itemContainer.png')} />
+                                        <View style={styles.Item}>
+                                            <Image source={this.state.screen === 1 ? serviceMedia[item.serviceId] : companyMedia[item.companyId]} style={styles.ItemImage} />
+                                            <View style={{ width: "100%", justifyContent: 'center', alignItems: 'center' }}><Text>{item.name}</Text></View>
+                                            <View style={{ width: "80%", justifyContent: 'space-between', alignItems: 'center', flexDirection: 'row' }}>
+                                                <View style={{ justifyContent: 'center', alignItems: 'center', flexDirection: 'row' }}>
+                                                    <Text>4</Text>
+                                                    <Image source={require('./SourceFiles/star1.png')} style={styles.Star} />
+                                                </View>
+                                                <View style={{ top: 10, flexDirection: 'column' }}>
+                                                    {this.state.screen !== 2 ? <Text style={{ fontSize: 10, textAlign: 'left' }}>190 profesyonel</Text> : null}
+                                                    <Text style={{ fontSize: 10, textAlign: 'left' }}>2.752 onaylı yorum</Text>
+                                                </View>
                                             </View>
                                         </View>
-                                    </View>
-                                </TouchableOpacity>
+                                    </TouchableOpacity>
 
-                            )}
-                            keyExtractor={item => this.state.screen === 1 ? item.serviceId.toString() : item.companyId.toString()}
-                        />
-                    </View> : null
+                                )}
+                                keyExtractor={item => this.state.screen === 1 ? item.serviceId.toString() : item.companyId.toString()}
+                            />
+                        </View> :
+                        <View style={styles.companyDetailContainer}>
+                            <View style={{ width: "84%", backgroundColor: 'white', height: 230 }}>
+                                <View style={{ flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center' }}>
+                                    <View>
+                                        <Image source={companyMedia[this.state.companyMediaId]} style={styles.companyDetailImage} />
+                                    </View>
+                                    <View>
+                                        <Text style={{ fontWeight: 'bold' }}>{this.state.companyNames}</Text>
+                                        <View style={{ justifyContent: 'center', alignItems: 'center', flexDirection: 'row' }}>
+                                            <Text>4</Text>
+                                            <Image source={require('./SourceFiles/star1.png')} style={styles.Star} />
+                                        </View>
+                                    </View>
+                                </View>
+                                <View style={{ left: 5 }}>
+                                    <View style={{ flexDirection: 'row', bottom: 10, justifyContent: 'flex-start', alignItems: 'center' }}>
+                                        <Image source={require('./SourceFiles/konum.png')} style={styles.LocationIcon} />
+                                        <Text style={{ left: 5, fontSize: 13 }}>Yenigün, Yozkent Sitesi, Köroğlu Blv. No:26, 07040 Muratpaşa/Antalya</Text>
+                                    </View>
+
+                                    <View style={{ flexDirection: 'row', bottom: 10, justifyContent: 'flex-start', alignItems: 'center' }}>
+                                        <Image source={require('./SourceFiles/telefon.png')} style={styles.PhoneIcon} />
+                                        <Text style={{ left: 5 }}> 0535 966 83 95</Text>
+                                    </View>
+                                    <View style={{ flexDirection: 'row', bottom: 5, justifyContent: 'flex-start', alignItems: 'center' }}>
+                                        <Image source={require('./SourceFiles/webAdres.png')} style={styles.WebIcon} />
+                                        <Text style={{ left: 5 }}>oxfordbilisim.com</Text>
+                                    </View>
+                                    <View style={{ width: "95%", bottom: 5, justifyContent: 'flex-end', alignItems: 'flex-end' }}>
+                                        <TouchableOpacity onPress={() => {
+                                            this.setState({
+                                                commentArea: !this.state.commentArea
+                                            })
+                                        }}>
+                                            <Image source={require('./SourceFiles/comment.png')} style={styles.CommentIcon} />
+                                        </TouchableOpacity>
+                                    </View>
+                                </View>
+                            </View>
+                            {this.state.commentArea ?
+                                <View style={styles.CommentContainer}>
+                                    <FlatList
+                                        data={this.state.companyCommentList}
+                                        numColumns={1}
+                                        renderItem={({ item }) => (
+                                            <View style={styles.CommentItem}>
+                                                <Image source={require('./SourceFiles/commentProfile.png')} style={styles.CommentProfile} />
+                                                <View style={{ left: 15, flexDirection: 'column' }}>
+                                                    <View style={{ width: 200, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around' }}>
+                                                        <Text style={{ fontSize: 20, fontWeight: 'bold' }}>{item.adSoyad}</Text>
+                                                        <View style={{ justifyContent: 'center', alignItems: 'center', flexDirection: 'row' }}>
+                                                            <Text>{item.vote}</Text>
+                                                            <Image source={require('./SourceFiles/star1.png')} style={styles.Star1} />
+                                                        </View>
+
+                                                    </View>
+                                                    <View style={{ width: 200, alignItems: 'center', justifyContent: 'center' }}>
+                                                        <Text style={{ textAlign: 'center', color: '#283856', fontSize: 10 }}>{item.comment} </Text>
+                                                    </View>
+                                                </View>
+                                            </View>
+                                        )}
+                                        keyExtractor={item => item.companyCommentId.toString()}
+                                    />
+
+                                </View> :
+                                <View>
+                                    <TextInput
+                                        placeholder={"Yorum yap"}
+                                        onChangeText={text => {
+                                            this.setState({
+                                                categorySearch: text
+                                            });
+                                        }}
+                                    />
+                                </View>
+                            }
+
+                        </View> : null
                 }
             </View >
         )

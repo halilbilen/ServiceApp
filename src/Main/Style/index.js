@@ -104,6 +104,43 @@ const styles = StyleSheet.create({
     }, Star: {
         width: "30rem", height: "30rem", resizeMode: 'contain', left: "20rem"
     }
+    , Star1: {
+        width: "50rem", height: "50rem", resizeMode: 'contain', left: "20rem"
+    }, companyDetailContainer: {
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginTop: "600rem",
+        width: "100%"
+    }, companyDetailImage: {
+        width: "380rem",
+        height: "350rem",
+        resizeMode: 'contain'
+    }, LocationIcon: {
+        width: "70rem",
+        height: "85rem", resizeMode: 'contain'
+    }, PhoneIcon: {
+        width: "65rem",
+        height: "85rem", resizeMode: 'contain'
+    }, WebIcon: {
+        width: "75rem",
+        height: "85rem", resizeMode: 'contain'
+    }, CommentIcon: {
+        width: "70rem",
+        height: "70rem", resizeMode: 'contain'
+    }, CommentProfile: {
+        width: "120rem",
+        height: "120rem", resizeMode: 'contain', left: "10rem"
+    }, CommentContainer: {
+        justifyContent: 'center', alignItems: 'center', width: "90%", top: "40rem", height: "300rem"
+    }, CommentItem: {
+        backgroundColor: 'white',
+        width: "980rem",
+        height: "200rem",
+        marginTop: "30rem",
+        justifyContent: 'flex-start',
+        alignItems: 'center',
+        flexDirection: 'row'
+    }
 
 });
 

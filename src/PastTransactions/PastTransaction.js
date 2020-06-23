@@ -3,21 +3,28 @@ import { View, Image, TouchableOpacity, Text, ImageBackground, TextInput, Alert,
 import styles from './Style/index'
 
 import axios from 'react-native-axios'
-var notifList = [
-    { NotificationId: 1, name: "Deneme1", image: require("./SourceFiles/Image1.png"), text: "21/7/2019 tarihinde değerlendirdiniz.", vote: 4, comment: "İş yoğunluklarından dolayı iletişim zordu ama kesinlikle doğru tercih" },
-    { NotificationId: 2, name: "Deneme2", image: require("./SourceFiles/Image2.png"), text: "21/7/2019 tarihinde değerlendirdiniz.", vote: 4, comment: "İş yoğunluklarından dolayı iletişim zordu ama kesinlikle doğru tercih" }
-];
-
 
 export default class PastTransaction extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            // notifList: []
+            pastTransaction: []
         }
 
     }
+    async componentDidMount() {
+        const response = await axios.post('http://192.168.1.34:5003/companycomment/GetByUserId', { userId: 1, statusId: 1 });
+        if (response.data.returnCode === 200) {
+            this.setState({
+                pastTransaction: response.data.data.companyComments
+            });
+            console.log(response);
+        }
+        else {
+            Alert.alert(response.data.returnMessage)
+        }
 
+    }
 
 
     render() {
@@ -38,22 +45,22 @@ export default class PastTransaction extends Component {
 
                 <View style={styles.ListContainer}>
                     <FlatList
-                        data={notifList}
+                        data={this.state.pastTransaction}
                         numColumns={1}
                         renderItem={({ item }) => (
 
                             <View style={styles.ItemContainer}>
                                 <View style={styles.Item}>
                                     <View style={styles.ItemImageContainer}>
-                                        <Image source={item.image} style={styles.ItemImage} />
+                                        <Image source={require('./SourceFiles/Image1.png')} style={styles.ItemImage} />
                                     </View>
                                     <View style={styles.ItemTextContainer}>
-                                        <Text style={{ textAlign: 'center', bottom: 5 }}>{item.text}</Text>
+                                        <Text style={{ textAlign: 'center', bottom: 5 }}>{"27/07/2019 tarihinde değerlendirdiniz."}</Text>
                                         <Text style={{ textAlign: 'center', color: '#283856', fontStyle: 'italic' }}>{item.comment}</Text>
                                         <View style={{ width: "85%", flexDirection: 'row', alignItems: 'center' }}>
                                             <Text style={{ textAlign: 'center', fontSize: 20 }}>{item.vote}</Text>
                                             <Image source={require('./SourceFiles/star1.png')} style={styles.Star} />
-                                            
+
 
                                         </View>
 
@@ -62,7 +69,7 @@ export default class PastTransaction extends Component {
                             </View>
 
                         )}
-                        keyExtractor={item => item.NotificationId}
+                        keyExtractor={item => item.companyCommentId.toString()}
                     />
                 </View>
             </View>

@@ -52,7 +52,7 @@ export default class Notification extends Component {
                             </View>
 
                         )}
-                        keyExtractor={item => item.NotificationId}
+                        keyExtractor={item => item.NotificationId.toString()}
                     />
                 </View>
             </View>
